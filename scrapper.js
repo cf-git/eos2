@@ -20,6 +20,8 @@ let DOM = require('jsdom').JSDOM,
     app,
     api,
     daemon,
+    cer,
+    key,
     cfg = {},
 
     /** Requires */
@@ -29,6 +31,7 @@ let DOM = require('jsdom').JSDOM,
     plivo   = require('plivo'),
     jf      = require('jsonfile'),
     jQuery  = require('jquery')(window),
+    fs      = require('fs'),
 
     /** Shortcuts */
     $       = jQuery,
@@ -38,6 +41,9 @@ let DOM = require('jsdom').JSDOM,
     debug   = function (o) {
         cfg.debugMode&&_(o);
     };
+
+cer = fs.readFileSync('./model/pub.eoskey.cer');
+key = fs.readFileSync('./model/eoskey.pem');
 
 api = plivo.RestAPI({
     authId:'MAODGWMDUXYWM4MWZIZJ',
@@ -172,6 +178,7 @@ daemon = {
         e.triggerHandler('rcChange');
     },
     processing: function (list) {
+        // debug(3);
         let i, ll = list.length, rc = 0;
         if (ll < 1) {
             _('Not found new ad');
@@ -185,7 +192,17 @@ daemon = {
             }
         });
         for (i = 0; i < ll; i++) {
-            request({method: "get", url:list[i].link, item:list[i]}, function (error, response, body) {
+            request({
+                url:list[i].link,
+                item:list[i],
+                method: "GET",
+                agentOptions: {
+                    cert: cer,
+                    key: key,
+                    passphrase: 'password',
+                    securityOptions: 'SSL_OP_NO_SSLv3'
+                }
+            }, function (error, response, body) {
                 let $$, $dl,
                     $i = this.item;
                 if(error){
@@ -265,10 +282,12 @@ daemon = {
         }
     },
     parseAds: function (response, body) {
+        // debug(response);
         let extraList, datas = [];
         if (response.statusCode !== 200) {
             return ;
         }
+        // debug(2);
         debug('parseAds - request ok');
         $ = $.newDom(body);
         /** Non promoted ads extras */
@@ -322,6 +341,7 @@ daemon = {
         return daemon;
     },
     reInit: function (timeout) {
+        // debug(0);
         setInterval (function (){
             daemon.destroy();
             setTimeout (daemon.init, cfg.timeout*2);
@@ -340,7 +360,17 @@ daemon = {
         });
         e.on('started', function () {
             if(daemon.history !== null && daemon.schema !== null) {
-                request(cfg.link, function (error, response, body) {
+                _(cfg.link);
+                request({
+                    url: cfg.link,
+                    method: "GET",
+                    agentOptions: {
+                        cert: cer,
+                        key: key,
+                        passphrase: 'password',
+                        securityOptions: 'SSL_OP_NO_SSLv3'
+                    }
+                }, function (error, response, body) {
                     if(!daemon.E(error)) daemon.parseAds(response, body);
                 });
             }
@@ -348,7 +378,7 @@ daemon = {
         });
         _('Daemon up');
         _('=========================');
-
+        // debug(1);
         daemon.start();
         return daemon;
     }
@@ -364,7 +394,7 @@ process.on('uncaughtException', function (err) {
         console.error(err.message);
     }
     console.log("Exception caught. Not exiting process..");
-    if(cfg.processExit) {
-        process.exit();
-    }
+    // if(cfg.processExit) {
+    //     process.exit();
+    // }
 });

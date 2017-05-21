@@ -1,6 +1,7 @@
 {
-    "host": "http://ikman.lk",
+    "host": "https://ikman.lk",
     "page": "/en/ads/sri-lanka/cars",
+
 
     "validationFile": "./model/app.json",
     "historyFile": "./model/history.json",
@@ -8,7 +9,7 @@
     "indexView": "app.ejs",
     "historyLength": 55,
 
-    "port": 8080,
+    "port": 8889,
     "timeout": 5000,
 
     "reInitTimeout": 3600000,
