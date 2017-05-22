@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Fixed by CF 2017-05-05
+ * Fixed by CF 2017-05-05/2017-05-22
  *
  * Possible will needed to install if dependency will corrupted
  * "navigator": "^1.0.1",
@@ -28,6 +28,7 @@ let DOM = require('jsdom').JSDOM,
     express = require('express'),
     bp      = require('body-parser'),
     request = require('request'),
+    path    = require('path'),
     plivo   = require('plivo'),
     jf      = require('jsonfile'),
     jQuery  = require('jquery')(window),
@@ -42,8 +43,8 @@ let DOM = require('jsdom').JSDOM,
         cfg.debugMode&&_(o);
     };
 
-cer = fs.readFileSync('./model/pub.eoskey.cer');
-key = fs.readFileSync('./model/eoskey.pem');
+cer = fs.readFileSync(path.resolve('./model/nixkeys/eos.crt'));
+key = fs.readFileSync(path.resolve('./model/nixkeys/eos.pem'));
 
 api = plivo.RestAPI({
     authId:'MAODGWMDUXYWM4MWZIZJ',
@@ -282,7 +283,7 @@ daemon = {
         }
     },
     parseAds: function (response, body) {
-        // debug(response);
+        debug(response);
         let extraList, datas = [];
         if (response.statusCode !== 200) {
             return ;
@@ -394,7 +395,7 @@ process.on('uncaughtException', function (err) {
         console.error(err.message);
     }
     console.log("Exception caught. Not exiting process..");
-    // if(cfg.processExit) {
-    //     process.exit();
-    // }
+    if(cfg.processExit) {
+        process.exit();
+    }
 });
